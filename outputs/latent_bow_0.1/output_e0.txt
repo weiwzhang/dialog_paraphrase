@@ -22,7 +22,7 @@ is it _UNK to _UNK the _UNK of _UNK
 inputs:
 _GOO what is a _UNK _UNK _UNK ? _EOS
 outputs:
-_UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+what _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK ? _UNK ? _UNK
 references:
 what is _UNK _UNK _UNK
 ----
@@ -64,14 +64,14 @@ how do i _UNK a _UNK _UNK my _UNK _UNK ? what are _UNK _UNK
 inputs:
 _GOO is the _UNK _UNK _UNK _UNK of ? _EOS
 outputs:
-_UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+what _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
 references:
 is the _UNK _UNK _UNK _UNK of _UNK _UNK
 ----
 inputs:
 _GOO is the _UNK _UNK _UNK _UNK of ? _EOS
 outputs:
-_UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+what _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
 references:
 is the _UNK _UNK _UNK _UNK of _UNK _UNK
 ----
