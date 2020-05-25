@@ -1,0 +1,105 @@
+inputs:
+_GOO what _UNK _UNK _UNK _UNK _UNK like ? _EOS
+outputs:
+what _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+what _UNK _UNK _UNK _UNK _UNK
+----
+inputs:
+_GOO is _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK ? _EOS
+outputs:
+what _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+how is _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+----
+inputs:
+_GOO can _UNK _UNK _UNK _UNK _UNK in _UNK ? _EOS
+outputs:
+_UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+is it _UNK to _UNK the _UNK of _UNK
+----
+inputs:
+_GOO what is a _UNK _UNK _UNK ? _EOS
+outputs:
+what is _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK ? _EOS
+references:
+what is _UNK _UNK _UNK
+----
+inputs:
+_GOO _UNK is the _UNK _UNK of _UNK _UNK and how can i _UNK _UNK _UNK ? _EOS
+outputs:
+what _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+_UNK is the _UNK _UNK of _UNK _UNK and how can i _UNK _UNK _UNK _UNK a _UNK
+----
+inputs:
+_GOO _UNK _UNK _UNK be _UNK _UNK _UNK _UNK and _UNK _UNK the _UNK _UNK ? what _UNK be
+outputs:
+what _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+_UNK _UNK be a _UNK _UNK _UNK _UNK and _UNK
+----
+inputs:
+_GOO _UNK i do _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK , _UNK are _UNK _UNK _UNK _UNK
+outputs:
+_UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+how do you _UNK _UNK _UNK _UNK and _UNK _UNK ? is _UNK _UNK _UNK of
+----
+inputs:
+_GOO _UNK is the best _UNK _UNK _UNK _UNK _UNK _UNK ? _EOS
+outputs:
+what _UNK the _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+_UNK is the best _UNK _UNK _UNK _UNK
+----
+inputs:
+_GOO how do you _UNK a _UNK _UNK a _UNK _UNK ? _EOS
+outputs:
+how do _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+how do i _UNK a _UNK _UNK my _UNK _UNK ? what are _UNK _UNK
+----
+inputs:
+_GOO is the _UNK _UNK _UNK _UNK of ? _EOS
+outputs:
+what is the _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+is the _UNK _UNK _UNK _UNK of _UNK _UNK
+----
+inputs:
+_GOO is the _UNK _UNK _UNK _UNK of ? _EOS
+outputs:
+what is the _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+is the _UNK _UNK _UNK _UNK of _UNK _UNK
+----
+inputs:
+_GOO in the _UNK _UNK a _UNK in the _UNK _UNK , why do _UNK _UNK _UNK _UNK ?
+outputs:
+what _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+in _UNK a _UNK in the _UNK _UNK , why do _UNK and _UNK _UNK
+----
+inputs:
+_GOO _UNK is _UNK _UNK ? _EOS
+outputs:
+_UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+_UNK _UNK _UNK _UNK
+----
+inputs:
+_GOO how _UNK the _UNK of _UNK _UNK _UNK the _UNK of _UNK _UNK ? _EOS
+outputs:
+what _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+what _UNK is _UNK _UNK and how _UNK _UNK it _UNK the _UNK _UNK
+----
+inputs:
+_GOO how _UNK _UNK does it _UNK to _UNK _UNK in _UNK _UNK _UNK _UNK _UNK ? _EOS
+outputs:
+how _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK _UNK
+references:
+how _UNK _UNK does it _UNK to learn _UNK _UNK _UNK _UNK
+----
