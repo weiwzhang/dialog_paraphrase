@@ -241,8 +241,8 @@ class LatentBow(object):
 
       dec_init_state = []
       for l in range(enc_layers):
-        dec_init_state.append(LSTMStateTuple(c=enc_state[l].c, 
-                                h=enc_state[l].h + sample_memory_avg))
+        dec_init_state.append(LSTMStateTuple(c=enc_state[0].c, 
+                                h=enc_state[0].h + sample_memory_avg))
       dec_init_state = tuple(dec_init_state)
       print("enc state size is", tf.shape(enc_state))
       print("dec_init_state is", dec_init_state)

@@ -2,6 +2,8 @@
 
 import os 
 import shutil
+import texar.tf as tx
+import copy
 
 class Config:
   ## Data configuration 
@@ -46,15 +48,15 @@ class Config:
 
   ## Model configuration 
   """Model names in: 
-  ["seq2seq", "bow_seq2seq", "latent_bow", "vae", "hierarchical_vae", "lm"]
+  ["transformer_bow", seq2seq", "bow_seq2seq", "latent_bow", "vae", "hierarchical_vae", "lm"]
   """
-  model_name = "latent_bow" 
+  model_name = "transformer_bow" 
   model_mode = "train" # ["train", "test"]
   model_version = "0.1"
   model_path = "../models/"
   output_path = "../outputs/"
 
-  state_size = 500
+  state_size = 512
   drop_out = 0.6
 
   # encoder
@@ -63,8 +65,90 @@ class Config:
   num_paraphrase = 4 # 1 for quora, 4 for mscoco
   enc_layers = 2
   lambda_enc_loss = 1.0
-  max_enc_bow = 30 # The number of bag of words, 25 for mscoco, 11 for quora
+  max_enc_bow = 11 # The number of bag of words, 25 for mscoco, 11 for quora
   no_residual = False
+
+#########################################################################
+### For Transformer
+  transformer_encoder = {
+    'dim': state_size,
+    'num_blocks': 2,
+    'multihead_attention': {
+        'num_heads': 8,
+        'output_dim': state_size
+        # See documentation for more optional hyperparameters
+    },
+    'initializer': {
+        'type': 'variance_scaling_initializer',
+        'kwargs': {
+            'scale': 1.0,
+            'mode': 'fan_avg',
+            'distribution': 'uniform',
+        },
+    },
+    'poswise_feedforward': tx.modules.default_transformer_poswise_net_hparams(
+        output_dim=state_size)
+  }
+
+  # Note: this is exactly same as transformer_encoder
+  transformer_decoder = {
+    'dim': state_size,
+    'num_blocks': 2,
+    'multihead_attention': {
+        'num_heads': 8,
+        'output_dim': state_size
+        # See documentation for more optional hyperparameters
+    },
+    'initializer': {
+        'type': 'variance_scaling_initializer',
+        'kwargs': {
+            'scale': 1.0,
+            'mode': 'fan_avg',
+            'distribution': 'uniform',
+        },
+    },
+    'poswise_feedforward': tx.modules.default_transformer_poswise_net_hparams(
+        output_dim=state_size)
+  }
+
+  transformer_emb = {
+    'name': 'lookup_table',
+    'dim': state_size,
+    'initializer': {
+        'type': 'random_normal_initializer',
+        'kwargs': {
+            'mean': 0.0,
+            'stddev': state_size**-0.5,
+        },
+    }
+  }
+
+  loss_label_confidence = 0.9
+
+  opt = {
+    'optimizer': {
+        'type': 'AdamOptimizer',
+        'kwargs': {
+            'beta1': 0.9,
+            'beta2': 0.997,
+            'epsilon': 1e-9
+        }
+    }
+  }
+
+  # # TODO: use this for better training
+  # lr = {
+  #   'learning_rate_schedule': 'constant.linear_warmup.rsqrt_decay.rsqrt_depth',
+  #   'lr_constant': 2 * (hidden_dim ** -0.5),
+  #   'static_lr': 1e-3,
+  #   'warmup_steps': 16000,
+  # }
+
+  beam_width = 5
+  length_penalty = 0.6
+  transformer_dec_max_len = 25  # Quora dataset's 95 percentile is 20
+
+#########################################################################
 
   # vae setting 
   vae_seq2seq = True
@@ -76,9 +160,9 @@ class Config:
   dec_layers = 2
   is_attn = True
   source_attn = True
-  max_dec_bow = 30 # 10 for mscoco, 11 for quora 
+  max_dec_bow = 11 # 10 for mscoco, 11 for quora 
   source_sample_ratio = 0.
-  sample_size = 30 # 12 for mscoco, 11 for quora, 30 for wikibio
+  sample_size = 11 # 12 for mscoco, 11 for quora, 30 for wikibio
   sampling_method = "greedy" # "topk", "greedy"
   topk_sampling_size = 1
   predict_source_bow = True
@@ -103,7 +187,7 @@ class Config:
   batch_size = 100 # 60 for the seq2seq model, effective batch size = 100 
   start_epoch = 0
   num_epoch = 20
-  train_print_interval = 500
+  train_print_interval = 512
 
   # evaluation metrics
   # eval_metrics_list = ["bleu", "rouge", "ppl", "dist", "self_bleu", "jaccard"]
@@ -119,7 +203,7 @@ class Config:
   random_seed = 15213
   target_metrics = "bleu_2" # ["ppl", "bleu_2"]
   optimizer = "Adam" 
-  learning_rate = 0.0008
+  learning_rate = 1e-3 # or 0.0008 default
   learning_rate_enc = 0.001 # or 1e-3, sensitive 
   learning_rate_dec = 0.001
 

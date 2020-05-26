@@ -99,7 +99,7 @@ class TrainingLog(object):
                       "precision_topk": [0], 
                       "recall_topk": [0]}
 
-    elif(self.model == "latent_bow"):
+    elif(self.model in ["latent_bow", "transformer_bow"]):
       self.log = {
                   "loss": [],
                   "enc_loss": [],  
@@ -468,8 +468,9 @@ class Controller(object):
       dec_outputs.extend(
         _cut_eos(output_dict["dec_predict"], self.dec_end_id))    
 
-      if(self.write_output and 
-        self.model_name == "latent_bow" and self.is_gumbel):
+      if(self.write_output
+        and self.is_gumbel
+        and self.model_name in ["latent_bow", "transformer_bow"]):
         output_dict_list = [output_dict]
         for i in range(self.gumbel_samples - 1):
           output_dict_list.append(model.predict(sess, batch_dict))
@@ -552,7 +553,7 @@ class Controller(object):
     model_name, model, dset, sess, mode, decoding_mode="greedy", ei=-1):
     if(model_name == "lm"):
       metrics_dict = self.eval_lm(model, dset, sess, mode, decoding_mode)
-    elif(model_name in ["seq2seq", "latent_bow", "vae", "bow_seq2seq"]):
+    elif(model_name in ["seq2seq", "latent_bow", "transformer_bow", "vae", "bow_seq2seq"]):
       metrics_dict = self.eval_generate(
         model, dset, sess, mode, decoding_mode, ei)
     return metrics_dict

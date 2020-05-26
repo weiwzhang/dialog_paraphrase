@@ -549,6 +549,11 @@ class Dataset(object):
         batch_dict = build_batch_bow_seq2seq(data_batch, len_batch, 
           self.stop_words, self.max_enc_bow, self.max_dec_bow, self.pad_id,
           self.predict_source_bow)
+      # transformer_bow logic is same as latent_bow for selecting next batch
+      elif(model == "transformer_bow"):  
+        batch_dict = build_batch_bow_seq2seq(data_batch, len_batch, 
+          self.stop_words, self.max_enc_bow, self.max_dec_bow, self.pad_id,
+          self.predict_source_bow)
       elif(model == "vae"):
         batch_dict = build_batch_vae(data_batch, len_batch)
     else: # evaluation
@@ -567,6 +572,11 @@ class Dataset(object):
           batch_dict = build_batch_bow_seq2seq_eval(data_batch, len_batch,
             self.stop_words, self.max_enc_bow, self.max_dec_bow, self.pad_id)
       elif(model == "latent_bow"):
+        batch_dict = build_batch_bow_seq2seq_eval(data_batch, len_batch,
+          self.stop_words, self.max_enc_bow, self.max_dec_bow, self.pad_id,
+          self.single_ref)
+      # transformer_bow logic is same as latent_bow for selecting next batch
+      elif(model == "transformer_bow"):
         batch_dict = build_batch_bow_seq2seq_eval(data_batch, len_batch,
           self.stop_words, self.max_enc_bow, self.max_dec_bow, self.pad_id,
           self.single_ref)
@@ -617,14 +627,14 @@ class Dataset(object):
       self.print_predict_seq2seq(output_dict, batch_dict, fd, num_cases)
     elif(model_name == "bow_seq2seq"):
       self.print_predict_bow_seq2seq(output_dict, batch_dict)
-    elif(model_name == "latent_bow"):
+    elif(model_name == "latent_bow" or model_name == "transformer_bow"):
       if(self.compare_outputs): 
         self.print_predict_seq2seq(output_dict, batch_dict, fd, num_cases)
       else: 
-        self.print_predict_latent_bow(output_dict, batch_dict, fd)
+        self.print_predict_latent_or_transformer_bow(output_dict, batch_dict, fd)
     return
 
-  def print_predict_latent_bow(self, output_dict, batch_dict, fd=None):
+  def print_predict_latent_or_transformer_bow(self, output_dict, batch_dict, fd=None):
     """Print the prediction, latent bow model
     
     Things to print

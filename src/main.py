@@ -14,6 +14,7 @@ from data_utils import Dataset
 from data_utils_table2text import DatasetTable2text
 from seq2seq import Seq2seq
 from bow_seq2seq import BowSeq2seq
+from transformer_bow import TransformerBow
 from latent_bow import LatentBow
 from latent_bow_data2text import LatentBowData2text
 from seq2seq_data2text import Seq2seqData2text
@@ -95,7 +96,9 @@ def main():
   config.stop_words = dset.stop_words
 
   # model 
-  if(config.model_name == "seq2seq"): 
+  if(config.model_name == "transformer_bow"): 
+    Model = TransformerBow
+  elif(config.model_name == "seq2seq"): 
     if(config.dataset == 'wikibio'): Model = Seq2seqData2text
     else: Model = Seq2seq
   elif(config.model_name == "bow_seq2seq"): Model = BowSeq2seq
@@ -106,7 +109,7 @@ def main():
     else: Model = LatentBow
   elif(config.model_name == "lm"): Model = LM
   else: 
-    msg = "the model name shoule be in ['seq2seq', 'vae', 'hierarchical_vae', 'latent_low', 'lm'], "
+    msg = "the model name shoule be in ['transformer_bow', 'seq2seq', 'vae', 'hierarchical_vae', 'latent_low', 'lm'], "
     msg += "current name: %s" % config.model_name
     raise Exception(msg)
 

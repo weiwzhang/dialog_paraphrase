@@ -117,8 +117,10 @@ def bow_predict_seq_tag(vocab_size,
                         tau=0.5,
                         max_src2tgt_word=3):
   """bow prediction as sequence tagging
-  
   Let each word from the source sentence predict its k nearest neighbors 
+
+  Returns:
+    seq_neighbor: [batch_size, T = ?, max_src2tgt_word]
   """
   bow_topk_prob = tf.zeros([enc_batch_size, vocab_size])
   gumbel_topk_prob = tf.zeros([enc_batch_size, vocab_size])
@@ -130,7 +132,7 @@ def bow_predict_seq_tag(vocab_size,
     return -tf.log(-tf.log(U + eps) + eps)
 
   for i in range(max_src2tgt_word):
-    bow_trans = tf.layers.Dense(500, name="bow_src2tgt_trans_%d" % i,
+    bow_trans = tf.layers.Dense(512, name="bow_src2tgt_trans_%d" % i,
       kernel_initializer=tf.random_normal_initializer(stddev=0.05),
       bias_initializer=tf.constant_initializer(0.))
     bow_proj = tf.layers.Dense(vocab_size, name="bow_src2tgt_proj_%d" % i,
@@ -162,6 +164,7 @@ def bow_predict_seq_tag(vocab_size,
       print("Not using gumbel reparametrization ... ")
       gumbel_topk_prob += tf.reduce_sum(bow_prob, 1)
 
+  print("bow_predict_seq_tag - seq nieghbor id before stacking", seq_neighbor_ind)
   seq_neighbor_ind = tf.stack(seq_neighbor_ind, 2) # [B, T, N]
   seq_neighbor_prob = tf.stack(seq_neighbor_prob, 2) # [B, T, N]
   return bow_topk_prob, gumbel_topk_prob, seq_neighbor_ind, seq_neighbor_prob

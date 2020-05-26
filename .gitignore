@@ -1,4 +1,4 @@
-
-outputs/
-__pycache__/
+*.DS_Store
+!/outputs/*.*
+!/src/__pycache__/*
 *.pyc
