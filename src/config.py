@@ -20,7 +20,7 @@ class Config:
       'test': '../data/mscoco/annotations2014/captions_train2014.json'
     },
     "quora": {
-      "train": "../data/quora/train.txt", 
+      "train": "../data/quora/train_quick.txt", 
       "test": ""
     }
   }
@@ -71,11 +71,18 @@ class Config:
 #########################################################################
 ### For Transformer
   transformer_encoder = {
-    'dim': state_size,
-    'num_blocks': 2,
+    'dim': 512,
+    'num_blocks': 6,
+    # 'use_bert_config': False,
+    "embedding_dropout": 0.2,
+    "residual_dropout": 0.2,
     'multihead_attention': {
+        'name': 'multihead_attention',
         'num_heads': 8,
-        'output_dim': state_size
+        'output_dim': 512,
+        # 'num_units': 512,
+        # 'dropout_rate': 0.1,
+        # 'use_bias': False,
         # See documentation for more optional hyperparameters
     },
     'initializer': {
@@ -92,11 +99,18 @@ class Config:
 
   # Note: this is exactly same as transformer_encoder
   transformer_decoder = {
-    'dim': state_size,
-    'num_blocks': 2,
+    'dim': 512,  # encoder output dimension
+    'num_blocks': 6,
+    # 'use_bert_config': False,
+    "embedding_dropout": 0.2,
+    "residual_dropout": 0.2,
     'multihead_attention': {
+        'name': 'multihead_attention',
         'num_heads': 8,
-        'output_dim': state_size
+        'output_dim': 512,
+        # 'num_units': 512,
+        # 'dropout_rate': 0.1,
+        # 'use_bias': False,
         # See documentation for more optional hyperparameters
     },
     'initializer': {
@@ -108,7 +122,10 @@ class Config:
         },
     },
     'poswise_feedforward': tx.modules.default_transformer_poswise_net_hparams(
-        output_dim=state_size)
+        output_dim=state_size),
+    "embedding_tie": True,
+    "output_layer_bias": False,
+    "max_decoding_length": int(1e10)
   }
 
   transformer_emb = {
@@ -145,7 +162,7 @@ class Config:
   # }
 
   beam_width = 5
-  length_penalty = 0.6
+  length_penalty = 0.8
   transformer_dec_max_len = 25  # Quora dataset's 95 percentile is 20
 
 #########################################################################
