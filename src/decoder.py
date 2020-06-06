@@ -146,7 +146,7 @@ def decoding_infer(start_id,
       dec_dist = mixed_dist
     else: 
       print('Not using copy mechanism in inference')
-      dec_dist = vocab_dist
+      dec_dist = vocab_dist  # prediction sample from vocab_dist, from dec_logits from dec_out
 
     if(sampling_method == "greedy"):
       dec_index = tf.argmax(dec_dist, axis=1, output_type=tf.int32)
@@ -182,7 +182,7 @@ def decoding_infer(start_id,
 
   dec_outputs = tf.transpose(dec_outputs.stack(), [1, 0, 2])
   dec_out_index = tf.transpose(dec_out_index.stack(), [1, 0])
-  return dec_outputs, dec_out_index
+  return dec_outputs, dec_out_index  # dec_out_index == predictions
 
 def _mix_dist(vocab_dist, pointers, memory, g):
   """Given previous decoder state, and current pointers, return the mixed
@@ -237,10 +237,10 @@ def decoding_train( dec_inputs,
                     bow_cond=None,
                     bow_cond_gate_proj=None):
   """The greedy decoding algorithm, used for training"""
-  dec_outputs = tf.TensorArray(tf.float32, size=max_dec_len)
-  dec_logits_train = tf.TensorArray(tf.float32, size=max_dec_len)
+  dec_outputs = tf.TensorArray(tf.float32, size=max_dec_len) # network output, [batch_size, timestep]
+  dec_logits_train = tf.TensorArray(tf.float32, size=max_dec_len) # projected from dec_outputs
   dec_pointers = tf.TensorArray(tf.float32, size=max_dec_len)
-  dec_prob_train = tf.TensorArray(tf.float32, size=max_dec_len)
+  dec_prob_train = tf.TensorArray(tf.float32, size=max_dec_len)  # for copy mechanism, not important
   dec_g_train = tf.TensorArray(tf.float32, size=max_dec_len)
   dec_inputs = tf.transpose(dec_inputs, [1, 0, 2]) # [T, B, S]
   dec_state = enc_state

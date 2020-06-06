@@ -35,7 +35,7 @@ def bow_gumbel_topk_sampling(bow_topk_prob, embedding_matrix, sample_size,
   sample_memory = tf.nn.embedding_lookup(embedding_matrix, ind) 
   sample_memory *= tf.expand_dims(sample_prob, [2])
 
-  return ind, sample_prob, sample_memory
+  return ind, sample_prob, sample_memory  # [batch_size, sample_size], [batch_size, sample_size], [batch_size, sample_size, state_size]
 
 def _calculate_dec_out_mem_ratio(
   dec_outputs, sample_ind, vocab_size, pad_id, start_id, end_id):
@@ -179,6 +179,7 @@ class LatentBow(object):
 
     # Encoder bow prediction
     with tf.variable_scope("bow_output"):
+      # probs: [batch_size, vocab_size]; seq_neighbor_*: [batch_size, timestep, max_src2tgt_words=3]
       bow_topk_prob, gumbel_topk_prob, seq_neighbor_ind, seq_neighbor_prob = \
         bow_predict_seq_tag(vocab_size, batch_size, enc_outputs, enc_lens, 
         max_len, self.is_gumbel, self.gumbel_tau)
@@ -188,7 +189,7 @@ class LatentBow(object):
     # Encoder output, loss and metrics 
     with tf.name_scope("enc_output"):
       # top k prediction 
-      bow_pred_prob, pred_ind = tf.nn.top_k(bow_topk_prob, max_enc_bow)
+      bow_pred_prob, pred_ind = tf.nn.top_k(bow_topk_prob, max_enc_bow) # [batch_size, BOW]
 
       # loss function 
       enc_targets = _enc_target_list_to_khot(
@@ -204,9 +205,10 @@ class LatentBow(object):
 
     # Encoder soft sampling 
     with tf.name_scope("gumbel_topk_sampling"):
+      # [batch_size, sample_size], [batch_size, sample_size], [batch_size, sample_size, state_size]
       sample_ind, sample_prob, sample_memory = bow_gumbel_topk_sampling(
         gumbel_topk_prob, embedding_matrix, self.sample_size, vocab_size)
-      sample_memory_lens = tf.ones(batch_size, tf.int32) * self.sample_size
+      sample_memory_lens = tf.ones(batch_size, tf.int32) * self.sample_size # [sample_size, sample_size, ... , sample_size] * batch_size
       sample_memory_avg = tf.reduce_mean(sample_memory, 1) # [B, S]
 
       sample_memory_output = {"bow_pred_ind": pred_ind, 

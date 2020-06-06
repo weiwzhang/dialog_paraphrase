@@ -183,36 +183,49 @@ class MultiheadAttentionEncoder(EncoderBase):
                         else:
                             # normal decoding
                             size = tf.shape(res)[1]
-                            false_fn = lambda: res
+                            false_fn = lambda: res                                           
                         out = tf.cond(
                             tf.equal(size, 0),
+                            # true_fn=lambda: self.multi_source_memory(memory, layer, self._hparams.num_units),
                             true_fn=lambda: layer(memory),
                             false_fn=false_fn)
                     else:
+                        # out = self.multi_source_memory(memory, layer, self._hparams.num_units)
                         out = layer(memory)
 
                 return out
 
             Q = self.Q_dense(queries)
+            print("Q's shape", Q)
             K = _update_and_return(self.K_dense, 'keys')
+            print("K's shape", K)
             V = _update_and_return(self.V_dense, 'values')
+            print("V's shape", V)
 
             Q_ = self._split_heads(Q)
             K_ = self._split_heads(K)
             V_ = self._split_heads(V)
+            print("after split_heads, QKV are:")
+            print(Q)
+            print(K)
+            print(V)
             # [batch_size, num_heads, seq_length, memory_depth]
             key_depth_per_head = num_units // num_heads
             Q_ *= key_depth_per_head**-0.5
 
             logits = tf.matmul(Q_, K_, transpose_b=True)
+            print("logits", logits)
+            print("memory_attention_bias", memory_attention_bias)
             if memory_attention_bias is not None:
                 logits += memory_attention_bias
             weights = tf.nn.softmax(logits, name="attention_weights")
             weights = tf.layers.dropout(weights,
                                         rate=self._hparams.dropout_rate,
                                         training=is_train_mode(mode))
+            print("weights:", weights)
             outputs = tf.matmul(weights, V_)
 
+            print("outputs:", outputs)
             outputs = self._combine_heads(outputs)
             outputs = self.O_dense(outputs)
             # (batch_size, length_query, output_dim)
@@ -233,6 +246,7 @@ class MultiheadAttentionEncoder(EncoderBase):
         splitted_x = tf.reshape(x, [tf.shape(x)[0], tf.shape(x)[1],
                                     self._hparams.num_heads,
                                     depth // self._hparams.num_heads])
+        print("splitted_x", splitted_x)
         return tf.transpose(splitted_x, [0, 2, 1, 3])
 
     def _combine_heads(self, x):
@@ -247,3 +261,32 @@ class MultiheadAttentionEncoder(EncoderBase):
         num_heads, dim = shape_list(t)[-2:]
         assert num_heads == self._hparams.num_heads
         return tf.reshape(t, [tf.shape(t)[0], tf.shape(t)[1], num_heads * dim])
+
+    # # customized code: generate multi-source memory, in enc-dec attention layer
+    # def multi_source_memory(self, memory, layer, state_size):
+    #     """Attention to multiple sources 
+      
+    #     query: a query vector [B, S]
+    #     memory: a list of memory vectors [[B, M, S], [B, M, S], ... ]
+    #     mem_lens: a list of memory length 
+    #     max_mem_len: a list of maximum memory length
+    #     """
+    #     print("in multi_source_memory:")
+    #     print("example memory:", layer(memory[1]))
+
+    #     if (isinstance(memory, list)):
+    #         context_vectors = []
+    #         for curr_mem in memory:
+    #             context_vectors.append(layer(curr_mem))
+    #         context_vectors = tf.concat(context_vectors, axis=1) 
+    #         # [B, num_mem * S] -> [B, S]
+    #         context_vector = tf.layers.dense(context_vectors, state_size, 
+    #             name="multi_source_attention",
+    #             kernel_initializer=tf.random_normal_initializer(stddev=0.05),
+    #             bias_initializer=tf.constant_initializer(0.), reuse=tf.AUTO_REUSE)
+    #         print("list memory:", context_vector)
+    #     else:
+    #         context_vector = layer(memory)
+    #         print("single memory:", context_vector)
+
+    #     return context_vector

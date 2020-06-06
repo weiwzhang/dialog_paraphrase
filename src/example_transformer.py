@@ -80,17 +80,19 @@ def main():
     learning_rate = tf.placeholder(tf.float64, shape=(), name='lr')
 
     # Source word embedding
-    src_word_embedder = tx.modules.WordEmbedder(  # initial embedding is [vocab_size, word_emb]
+    src_word_embedder = tx.modules.WordEmbedder(  # initial embedding is [vocab_size, word_emb_dim]
         vocab_size=vocab_size, hparams=config_model.emb)
-    src_word_embeds = src_word_embedder(encoder_input) # after embedding lookup, embds = [batch_size, timestep, word_emb] 
+    src_word_embeds = src_word_embedder(encoder_input) # after embedding lookup, embds = [batch_size, timestep, word_emb_dim] 
     src_word_embeds = src_word_embeds * config_model.hidden_dim ** 0.5
+    # note: src_word_embeds.embedding = [vocab_size, word_emb_dim]
 
     # Position embedding (shared b/w source and target)
+    # note: pos_embedder.embedding = [position_size, state_size]
     pos_embedder = tx.modules.SinusoidsPositionEmbedder(
         position_size=config_data.max_decoding_length,  # i.e. embed up to max_decoding_length positions
         hparams=config_model.position_embedder_hparams)
     src_seq_len = tf.ones([batch_size], tf.int32) * tf.shape(encoder_input)[1]  # [timestep, timestep, ....., timestep], batch_size
-    src_pos_embeds = pos_embedder(sequence_length=src_seq_len)   # [batch_size, timestep, word_emb]
+    src_pos_embeds = pos_embedder(sequence_length=src_seq_len)   # [batch_size, timestep, word_emb_dim]
 
     src_input_embedding = src_word_embeds + src_pos_embeds
 
@@ -105,7 +107,7 @@ def main():
     tgt_embedding = tf.concat(
         [tf.zeros(shape=[1, src_word_embedder.dim]),  # src_word_embedder.dim = word_emb.dim
          src_word_embedder.embedding[1:, :]],
-        axis=0)
+        axis=0)  #should be same dimension as src_word_embedder
     tgt_embedder = tx.modules.WordEmbedder(tgt_embedding)
     tgt_word_embeds = tgt_embedder(decoder_input)
     tgt_word_embeds = tgt_word_embeds * config_model.hidden_dim ** 0.5
@@ -115,7 +117,7 @@ def main():
 
     tgt_input_embedding = tgt_word_embeds + tgt_pos_embeds
 
-    _output_w = tf.transpose(tgt_embedder.embedding, (1, 0))
+    _output_w = tf.transpose(tgt_embedder.embedding, (1, 0))  # [word_emb_dim, vocab_size]
 
     decoder = TransformerDecoder(vocab_size=vocab_size,
                                  output_layer=_output_w,
@@ -123,9 +125,9 @@ def main():
     # For training
     outputs = decoder(
         memory=encoder_output,
-        memory_sequence_length=encoder_input_length,
-        inputs=tgt_input_embedding,
-        decoding_strategy='train_greedy',
+        memory_sequence_length=encoder_input_length,  # IDEA: use actual length before padding? 
+        inputs=tgt_input_embedding,  # i.e. used teacher forcing techniques
+        decoding_strategy='train_greedy',  # IDEA: use beam search and remove greedy training
         mode=tf.estimator.ModeKeys.TRAIN
     )
 
