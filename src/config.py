@@ -20,7 +20,7 @@ class Config:
       'test': '../data/mscoco/annotations2014/captions_train2014.json'
     },
     "quora": {
-      "train": "../data/quora/train_quick.txt", 
+      "train": "../data/quora/train.txt", 
       "test": ""
     }
   }
@@ -72,7 +72,7 @@ class Config:
 ### For Transformer
   transformer_encoder = {
     'dim': 512,
-    'num_blocks': 6,
+    'num_blocks': 2,
     # 'use_bert_config': False,
     "embedding_dropout": 0.2,
     "residual_dropout": 0.2,
@@ -100,7 +100,7 @@ class Config:
   # Note: this is exactly same as transformer_encoder
   transformer_decoder = {
     'dim': 512,  # encoder output dimension
-    'num_blocks': 6,
+    'num_blocks': 2,
     # 'use_bert_config': False,
     "embedding_dropout": 0.2,
     "residual_dropout": 0.2,

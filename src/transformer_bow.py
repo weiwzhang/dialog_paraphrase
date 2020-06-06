@@ -265,27 +265,6 @@ class TransformerBow(object):
       print("gumbel optk sampling", sample_memory_output)
 
     with tf.variable_scope("decoder"):
-      # dec_cell = [create_cell(
-      #   "dec-%d" % i, state_size, self.drop_out, self.no_residual) 
-      #   for i in range(enc_layers)]
-      # dec_cell = tf.nn.rnn_cell.MultiRNNCell(dec_cell)
-      dec_proj = tf.layers.Dense(vocab_size, name="dec_proj",
-        kernel_initializer=tf.random_normal_initializer(stddev=0.05),
-        bias_initializer=tf.constant_initializer(0.))
-      # dec_ptr_k_proj = [
-      #   tf.layers.Dense(state_size, name="dec_ptr_k_proj_%d" % pi,
-      #   kernel_initializer=tf.random_normal_initializer(stddev=0.05),
-      #   bias_initializer=tf.constant_initializer(0.)) 
-      #   for pi in range(self.num_pointers)]
-      # dec_ptr_g_proj = tf.layers.Dense(1, name="dec_ptr_g_proj",
-      #   kernel_initializer=tf.random_normal_initializer(stddev=0.05),
-      #   bias_initializer=tf.constant_initializer(0.),
-      #   activation=tf.nn.sigmoid)
-      # bow_cond_gate_proj = tf.layers.Dense(1, name="bow_cond_gate_proj",
-      #   kernel_initializer=tf.random_normal_initializer(stddev=0.05),
-      #   bias_initializer=tf.constant_initializer(0.),
-      #   activation=tf.nn.sigmoid)
-
       # tgt_embedding = tf.concat(
       #     [tf.zeros(shape=[1, src_word_embedder.dim]),
       #      src_word_embedder.embedding[1:, :]],
@@ -309,31 +288,31 @@ class TransformerBow(object):
                                    output_layer=_output_w,
                                    hparams=self.transformer_decoder)
 
-      # TODO: use this in dec attention layer
-      # if(self.source_attn):
-      #   # [B, M + T, S]
-      #   dec_memory = [sample_memory, enc_outputs]
-      #   dec_mem_len = [sample_memory_lens, enc_lens]
-      #   dec_max_mem_len = [self.sample_size, max_len]
-      # else:
-      #   dec_memory = sample_memory
-      #   dec_mem_len = sample_memory_lens
-      #   dec_max_mem_len = tf.shape(dec_memory)[1] 
+      dec_memory = [enc_outputs, sample_memory]  #[[batch_size, sample_size, enc_dim], [batch_size, timestep, enc_dim]]
+      dec_mem_len = [enc_lens, sample_memory_lens]  #[[batch_size, ]*sample_size, [batch_size, ]*enc_seq_len]
+      dec_max_mem_len = [max_len, self.sample_size] #[sample_size, max_len]
+      print("with bow final dec memory inputs:")
+      print(dec_memory)
+      print(dec_mem_len)
+      print(dec_max_mem_len)
 
-      dec_memory = sample_memory
-      dec_mem_len = sample_memory_lens
-      dec_max_mem_len = tf.shape(dec_memory)[1] # BOW
+      # # Note: if source_attn = False
+      # dec_memory = sample_memory
+      # dec_mem_len = sample_memory_lens
+      # dec_max_mem_len = tf.shape(dec_memory)[1] # BOW
 
-      # TODOL: remove bow_cond
-      if(self.bow_cond): bow_cond = sample_memory_avg
-      else: bow_cond = None
+      # # TODOL: remove bow_cond
+      # if(self.bow_cond): bow_cond = sample_memory_avg
+      # else: bow_cond = None
 
-      if(self.bow_cond_gate == False): bow_cond_gate_proj = None
+      # if(self.bow_cond_gate == False): bow_cond_gate_proj = None
 
       # For training
       outputs = decoder(
-          memory=enc_outputs,
-          memory_sequence_length=enc_lens,
+          # memory=enc_outputs,
+          memory=dec_memory,
+          # memory_sequence_length=enc_lens,
+          memory_sequence_length=dec_mem_len,
           inputs=tgt_input_embedding,
           decoding_strategy='train_greedy',
           mode=tf.estimator.ModeKeys.TRAIN
@@ -358,8 +337,10 @@ class TransformerBow(object):
       # For inference (beam-search)
       start_tokens = tf.fill([batch_size], self.dec_start_id)  # start tokens
       predictions, _ = decoder(
-          memory=enc_outputs,
-          memory_sequence_length=enc_lens,
+          # memory=enc_outputs,
+          memory=dec_memory,
+          # memory_sequence_length=enc_lens,
+          memory_sequence_length=dec_mem_len,
           beam_width=None,    # TODO: add beam search
           length_penalty=self.length_penalty,
           decoding_strategy="infer_greedy",

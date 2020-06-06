@@ -196,36 +196,36 @@ class MultiheadAttentionEncoder(EncoderBase):
                 return out
 
             Q = self.Q_dense(queries)
-            print("Q's shape", Q)
+            # print("Q's shape", Q)
             K = _update_and_return(self.K_dense, 'keys')
-            print("K's shape", K)
+            # print("K's shape", K)
             V = _update_and_return(self.V_dense, 'values')
-            print("V's shape", V)
+            # print("V's shape", V)
 
             Q_ = self._split_heads(Q)
             K_ = self._split_heads(K)
             V_ = self._split_heads(V)
-            print("after split_heads, QKV are:")
-            print(Q)
-            print(K)
-            print(V)
+            # print("after split_heads, QKV are:")
+            # print(Q)
+            # print(K)
+            # print(V)
             # [batch_size, num_heads, seq_length, memory_depth]
             key_depth_per_head = num_units // num_heads
             Q_ *= key_depth_per_head**-0.5
 
             logits = tf.matmul(Q_, K_, transpose_b=True)
-            print("logits", logits)
-            print("memory_attention_bias", memory_attention_bias)
+            # print("logits", logits)
+            # print("memory_attention_bias", memory_attention_bias)
             if memory_attention_bias is not None:
                 logits += memory_attention_bias
             weights = tf.nn.softmax(logits, name="attention_weights")
             weights = tf.layers.dropout(weights,
                                         rate=self._hparams.dropout_rate,
                                         training=is_train_mode(mode))
-            print("weights:", weights)
+            # print("weights:", weights)
             outputs = tf.matmul(weights, V_)
 
-            print("outputs:", outputs)
+            # print("outputs:", outputs)
             outputs = self._combine_heads(outputs)
             outputs = self.O_dense(outputs)
             # (batch_size, length_query, output_dim)
@@ -246,7 +246,7 @@ class MultiheadAttentionEncoder(EncoderBase):
         splitted_x = tf.reshape(x, [tf.shape(x)[0], tf.shape(x)[1],
                                     self._hparams.num_heads,
                                     depth // self._hparams.num_heads])
-        print("splitted_x", splitted_x)
+        # print("splitted_x", splitted_x)
         return tf.transpose(splitted_x, [0, 2, 1, 3])
 
     def _combine_heads(self, x):
