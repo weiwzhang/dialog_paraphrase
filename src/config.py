@@ -56,7 +56,7 @@ class Config:
   model_path = "../models/"
   output_path = "../outputs/"
 
-  state_size = 512
+  state_size = 300
   drop_out = 0.6
 
   # encoder
@@ -70,8 +70,13 @@ class Config:
 
 #########################################################################
 ### For Transformer
+
+  # Word2Vec settings
+  word2vec_dim = 300  # TODO: revisit this number
+  id2wordemb = None    # filled during dataset configuration
+
   transformer_encoder = {
-    'dim': 512,
+    'dim': 300,
     'num_blocks': 2,
     # 'use_bert_config': False,
     "embedding_dropout": 0.2,
@@ -79,7 +84,7 @@ class Config:
     'multihead_attention': {
         'name': 'multihead_attention',
         'num_heads': 8,
-        'output_dim': 512,
+        'output_dim': 300,
         # 'num_units': 512,
         # 'dropout_rate': 0.1,
         # 'use_bias': False,
@@ -99,7 +104,7 @@ class Config:
 
   # Note: this is exactly same as transformer_encoder
   transformer_decoder = {
-    'dim': 512,  # encoder output dimension
+    'dim': 300,  # encoder output dimension
     'num_blocks': 2,
     # 'use_bert_config': False,
     "embedding_dropout": 0.2,
@@ -107,7 +112,7 @@ class Config:
     'multihead_attention': {
         'name': 'multihead_attention',
         'num_heads': 8,
-        'output_dim': 512,
+        'output_dim': 300,
         # 'num_units': 512,
         # 'dropout_rate': 0.1,
         # 'use_bias': False,
@@ -128,16 +133,17 @@ class Config:
     "max_decoding_length": int(1e10)
   }
 
-  transformer_emb = {
-    'name': 'lookup_table',
-    'dim': state_size,
-    'initializer': {
-        'type': 'random_normal_initializer',
-        'kwargs': {
-            'mean': 0.0,
-            'stddev': state_size**-0.5,
-        },
-    }
+  transformer_src_emb = {
+    'name': 'source_word_embeddings',
+    'dim': word2vec_dim,
+    "trainable": True
+    # 'initializer': {
+    #     'type': 'random_normal_initializer',
+    #     'kwargs': {
+    #         'mean': 0.0,
+    #         'stddev': state_size**-0.5,
+    #     },
+    # }
   }
 
   loss_label_confidence = 0.9
@@ -217,7 +223,7 @@ class Config:
 
   # optimizer 
   learning_rate_decay = False
-  random_seed = 15213
+  random_seed = 15213   # IDEA: change random seed and re-run certain experiments, see if reproducible
   target_metrics = "bleu_2" # ["ppl", "bleu_2"]
   optimizer = "Adam" 
   learning_rate = 1e-3 # or 0.0008 default

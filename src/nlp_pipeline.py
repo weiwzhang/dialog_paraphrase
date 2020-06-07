@@ -9,6 +9,9 @@ import numpy as np
 import nltk 
 from nltk.corpus import stopwords
 from collections import Counter
+import gensim
+from gensim.models import KeyedVectors
+import tensorflow as tf
 
 def normalize(sentence_sets, word2id, max_sent_len):
   """Normalize the sentences by the following procedure
@@ -21,6 +24,9 @@ def normalize(sentence_sets, word2id, max_sent_len):
     sentence_sets: the set of sentence paraphrase, a list of sentence list
     word2id: word index, a dictionary
     max_sent_len: maximum sentence length, a integer
+
+  Retruns:
+    sent_sets: [# of sentence pairs, 2,  padded_sentence_vector(ids)]
   """
   sent_sets = []
   sent_len_sets = []
@@ -49,7 +55,8 @@ def normalize(sentence_sets, word2id, max_sent_len):
     
     sent_sets.append(st_)
     sent_len_sets.append(st_len)
-  return sent_sets, sent_len_sets
+  # print("in data normalize:", len(sent_sets), len(sent_sets[0]))
+  return sent_sets, sent_len_sets 
 
 def corpus_statistics(sentence_sets, vocab_size_threshold=5):
   """Calculate basic corpus statistics"""
@@ -107,7 +114,7 @@ def get_vocab(training_set, vocab_size_threshold=5):
       vocab.extend(s)
 
   vocab = Counter(vocab)
-  vocab_truncate = [w for w in vocab if vocab[w] >= vocab_size_threshold]
+  vocab_truncate = [w for w in vocab if vocab[w] >= vocab_size_threshold]  
   
   word2id = {"_GOO": 0, "_EOS": 1, "_PAD": 2, "_UNK": 3}
   id2word = {0: "_GOO", 1: "_EOS", 2: "_PAD", 3: "_UNK"}
@@ -121,3 +128,14 @@ def get_vocab(training_set, vocab_size_threshold=5):
   assert(len(word2id) == len(id2word))
   print("vocabulary size: %d" % len(word2id))
   return word2id, id2word
+
+def get_vocab_word2vec(model, id2word, seed):
+  """Return word2vec embedding matrix [vocab_size, word2vec_emb_size]"""
+  with tf.variable_scope("word2vec_embeddings"):
+    id2wordemb = {i : model[w] for (i, w) in id2word.items() if i >= 4}
+    # add in random embedding for GOO, EOS, PAD, UNK
+    emb_shape = list(id2wordemb.values())[0].shape
+    for i in range(4):
+      id2wordemb[i] = tf.random_normal(emb_shape, mean=0.0, stddev=0.05, dtype=tf.float32, seed=seed, name="word_embedding" + str(i))
+  # print("id2wordemb size:", len(id2wordemb), len(id2wordemb[5]))
+  return id2wordemb

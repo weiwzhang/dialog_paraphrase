@@ -94,6 +94,7 @@ def main():
   config.dec_end_id = dset.word2id["_EOS"]
   config.pad_id = dset.pad_id
   config.stop_words = dset.stop_words
+  config.id2wordemb = dset.id2wordemb
 
   # model 
   if(config.model_name == "transformer_bow"): 

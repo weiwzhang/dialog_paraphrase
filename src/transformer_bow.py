@@ -125,12 +125,14 @@ class TransformerBow(object):
     # additional configs for transformer
     self.transformer_encoder = config.transformer_encoder
     self.transformer_decoder = config.transformer_decoder 
-    self.transformer_emb = config.transformer_emb
+    self.transformer_src_emb = config.transformer_src_emb
     self.loss_label_confidence = config.loss_label_confidence
     self.opt = config.opt
     self.beam_width = config.beam_width
     self.length_penalty = config.length_penalty
     self.transformer_dec_max_len = config.transformer_dec_max_len
+    self.id2wordemb = config.id2wordemb
+    self.word2vec_dim = config.word2vec_dim
     return 
 
   def build(self):
@@ -173,21 +175,28 @@ class TransformerBow(object):
     # Embedding 
     with tf.variable_scope("embeddings"):
       # Source word embedding
-      src_word_embedder = tx.modules.WordEmbedder(  # embedder parameters [vocab_size, word_emb_dim]
-          vocab_size=vocab_size, hparams=self.transformer_emb)
+      # embedding_matrix = tf.get_variable(
+      #   name="embedding_matrix", 
+      #   shape=[vocab_size, state_size],  
+      #   dtype=tf.float32)
+      embedding_list = [t[1] for t in sorted(self.id2wordemb.items(), key=lambda p:p[0])]
+      embedding_matrix = tf.convert_to_tensor(embedding_list, dtype=tf.float32, name="word_emberdding_matrix")
+      # src_word_embedder = tx.modules.WordEmbedder(  # embedder parameters [vocab_size, word_emb_dim]
+      #     vocab_size=vocab_size, hparams=self.transformer_src_emb)
+      src_word_embedder = tx.modules.WordEmbedder(init_value=embedding_matrix, hparams=self.transformer_src_emb)
       src_word_embeds = src_word_embedder(enc_inputs) # after embedding lookup, embds = [batch_size, timestep, word_emb_dim] 
-      src_word_embeds = src_word_embeds * state_size ** 0.5
+      src_word_embeds = src_word_embeds * self.word2vec_dim ** 0.5
       # note: src_word_embeds.embedding = [vocab_size, word_emb_dim]
       print("src_word_embeds", src_word_embeds)
 
       # Position embedding (shared b/w source and target)
       # note: pos_embedder.embedding = [position_size, state_size]
-      position_embedder_hparams = {"dim": state_size}
+      position_embedder_hparams = {"dim": self.word2vec_dim}
       max_len_as_float = tf.cast(max_len, tf.float32)   # TODO: do we need to revisit max_decoding_length?
       pos_embedder = tx.modules.SinusoidsPositionEmbedder(
           position_size=max_len_as_float,   # i.e. embed up to max_decoding_length positions
           hparams=position_embedder_hparams)
-      src_seq_len = tf.ones([batch_size], tf.int32) * max_len  # [timestep, timestep, ....., timestep], batch_size
+      src_seq_len = tf.ones([batch_size], tf.int32) * tf.shape(enc_inputs)[1]  # [timestep, timestep, ....., timestep], batch_size
       positional_embeddings = pos_embedder(sequence_length=src_seq_len)   # [batch_size, timestep, word_emb_dim]
       print("enc positional embeddings", positional_embeddings)
 
@@ -197,11 +206,9 @@ class TransformerBow(object):
     # Encoder  
     with tf.variable_scope("encoder"):
       encoder = TransformerEncoder(hparams=self.transformer_encoder)
-      # TODO: does it make a difference for sequence_length = pre-padding?
-      # e.g. enc_lens = tf.reduce_sum(1 - tf.cast(tf.equal(enc_inputs, 0), tf.int32), axis=1)
       enc_outputs = encoder(inputs=transformer_enc_inputs, sequence_length=enc_lens)  # [batch_size, timestep, enc_dim]
 
-      print("state size is", state_size)
+      print("state size is", self.word2vec_dim)
       print("vocab_size is", vocab_size)
       print("enc_inputs is", enc_inputs)
       print("enc_lens is", enc_lens)
@@ -243,13 +250,6 @@ class TransformerBow(object):
 
     # Encoder soft sampling 
     with tf.name_scope("gumbel_topk_sampling"):
-      # note: originally this emvedding_matrix also sample initial network input
-      embedding_matrix = tf.get_variable(
-        name="embedding_matrix", 
-        shape=[vocab_size, state_size],
-        dtype=tf.float32,
-        initializer=tf.random_normal_initializer(stddev=0.05))
-
       # sample memory = [batch_size, BOW, state_size]
       sample_ind, sample_prob, sample_memory = bow_gumbel_topk_sampling(
         gumbel_topk_prob, embedding_matrix, self.sample_size, vocab_size)
@@ -273,7 +273,7 @@ class TransformerBow(object):
       # TODO: example transformer did extra processing of src_word_embedder.embedding, do we need that?
       tgt_embedder = tx.modules.WordEmbedder(src_word_embedder.embedding)
       tgt_word_embeds = tgt_embedder(dec_inputs)
-      tgt_word_embeds = tgt_word_embeds * state_size ** 0.5
+      tgt_word_embeds = tgt_word_embeds * self.word2vec_dim ** 0.5
       print("tgt word embedding", tgt_word_embeds)
 
       dec_seq_len = tf.ones([batch_size], tf.int32) * tf.shape(dec_inputs)[1]  # [batch_size, dec_input_seq_len]
@@ -347,7 +347,7 @@ class TransformerBow(object):
           start_tokens=start_tokens,
           end_token=self.dec_end_id,  # end tokens
           embedding=_embedding_fn,
-          max_decoding_length=max_len,  # QUESTION: decoding length has to be same as encoding length aka encoding positional embeddings length ?
+          max_decoding_length=max_len,  
           mode=tf.estimator.ModeKeys.PREDICT)
       print("predictions:", predictions)
       # vocab_dist = tf.nn.softmax(predictions.logits)

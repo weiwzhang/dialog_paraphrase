@@ -30,6 +30,7 @@ from tqdm import tqdm
 from nltk.translate.bleu_score import corpus_bleu
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+import gensim
 
 from nlp_pipeline import *
 
@@ -236,6 +237,7 @@ def build_batch_bow_seq2seq_eval(
                 "dec_bow": np.array(dec_bow),
                 "dec_bow_len": np.array(dec_bow_len),
                 "references": references}
+  # print("print batch:", batch_dict)
   return batch_dict
 
 def build_batch_bow_seq2seq(data_batch, 
@@ -271,7 +273,7 @@ def build_batch_bow_seq2seq(data_batch,
     for i in range(num_para):
       j = (i + 1) % num_para
       inp = st[i][: -1]
-      d_in = st[j][: -1]
+      d_in = st[j][: -1]  # i.e. decoder input == expected decoder output, teacher forcing technique
       d_out = st[j][1: ]
       len_inp = slen[i]
       len_out = slen[j]
@@ -279,7 +281,7 @@ def build_batch_bow_seq2seq(data_batch,
       enc_inputs.append(inp)
       enc_lens.append(len_inp)
 
-      d_bow = set(d_in) - stop_words
+      d_bow = set(d_in) - stop_words  # i.e. decoder BOW sampling space is same as encoder sentence pair's other sentence's space
       d_bow_len = len(d_bow)
       d_bow_ = d_bow
       d_bow = _pad(d_bow, max_dec_bow, pad_id)
@@ -296,8 +298,8 @@ def build_batch_bow_seq2seq(data_batch,
       # method 1: pad bow
       # do not predict source words
       if(source_bow == False):
-        e_bow -= set(inp) 
-      e_bow = _pad(e_bow, max_enc_bow, pad_id)
+        e_bow -= set(inp)  
+      e_bow = _pad(e_bow, max_enc_bow, pad_id)  # i.e. encoder BOW sampling space is same as encoder sentence pair's other sentence's space
 
       # method 2: repeat bow
       # e_bow = list(e_bow)
@@ -315,7 +317,7 @@ def build_batch_bow_seq2seq(data_batch,
       dec_bow.append(d_bow)
       dec_bow_len.append(d_bow_len)
       dec_inputs.append(d_in)
-      dec_targets.append(d_out)
+      dec_targets.append(d_out)  # dec_target = encoder sentence pair's other sentence
       dec_lens.append(len_out)
 
   batch_dict = {"enc_inputs":   np.array(enc_inputs),
@@ -326,6 +328,7 @@ def build_batch_bow_seq2seq(data_batch,
                 "dec_inputs":   np.array(dec_inputs),
                 "dec_targets":  np.array(dec_targets),
                 "dec_lens":     np.array(dec_lens)}
+  # print("print batch - train", batch_dict)
   return batch_dict
 
 def build_batch_seq2seq_eval(data_batch, len_batch):
@@ -440,6 +443,7 @@ class Dataset(object):
     self.predict_source_bow = config.predict_source_bow
     self.single_ref = config.single_ref
     self.compare_outputs = config.compare_outputs
+    self.random_seed = config.random_seed
 
     self.stop_words = set(stopwords.words('english'))
 
@@ -476,6 +480,8 @@ class Dataset(object):
     * build vocabulary
     * normalize the text 
     """
+    print("in dataset config:")
+
     # read training sentences
     if(self.dataset == "mscoco"):
       train_sentences = mscoco_read_json(self.dataset_path["train"])
@@ -484,12 +490,22 @@ class Dataset(object):
     elif(self.dataset == "quora"):
       train_sentences = quora_read(self.dataset_path["train"])
 
+    # # write to file for generating model
+    # with open("../data/quora/train_lower.txt", 'w') as f:
+    #   for s in [s for s_pair in train_sentences for s in s_pair]:
+    #       for w in s:
+    #         f.write("%s " % w)
+    #       f.write("\n")
+
     # corpus_statistics(train_sentences)
 
     train_sentences, dev_sentences = train_dev_split(
       self.dataset, train_sentences) 
 
     word2id, id2word = get_vocab(train_sentences)
+    # create word embeddings matrix using FastText model
+    word2vec_model = gensim.models.KeyedVectors.load_word2vec_format('../models/quora_fasttext_model.vec')
+    self.id2wordemb = get_vocab_word2vec(word2vec_model, id2word, self.random_seed)
 
     train_sentences, train_lens = normalize(
       train_sentences, word2id, self.max_sent_len)
