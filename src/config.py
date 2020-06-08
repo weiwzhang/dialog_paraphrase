@@ -56,7 +56,7 @@ class Config:
   model_path = "../models/"
   output_path = "../outputs/"
 
-  state_size = 300
+  state_size = 500
   drop_out = 0.6
 
   # encoder
@@ -72,11 +72,11 @@ class Config:
 ### For Transformer
 
   # Word2Vec settings
-  word2vec_dim = 300  # TODO: revisit this number
+  word2vec_dim = 500  # TODO: revisit this number
   id2wordemb = None    # filled during dataset configuration
 
   transformer_encoder = {
-    'dim': 300,
+    'dim': 500,
     'num_blocks': 2,
     # 'use_bert_config': False,
     "embedding_dropout": 0.2,
@@ -84,7 +84,7 @@ class Config:
     'multihead_attention': {
         'name': 'multihead_attention',
         'num_heads': 8,
-        'output_dim': 300,
+        'output_dim': 500,
         # 'num_units': 512,
         # 'dropout_rate': 0.1,
         # 'use_bias': False,
@@ -104,7 +104,7 @@ class Config:
 
   # Note: this is exactly same as transformer_encoder
   transformer_decoder = {
-    'dim': 300,  # encoder output dimension
+    'dim': 500,  # encoder output dimension
     'num_blocks': 2,
     # 'use_bert_config': False,
     "embedding_dropout": 0.2,
@@ -112,7 +112,7 @@ class Config:
     'multihead_attention': {
         'name': 'multihead_attention',
         'num_heads': 8,
-        'output_dim': 300,
+        'output_dim': 500,
         # 'num_units': 512,
         # 'dropout_rate': 0.1,
         # 'use_bias': False,
@@ -130,7 +130,9 @@ class Config:
         output_dim=state_size),
     "embedding_tie": True,
     "output_layer_bias": False,
-    "max_decoding_length": int(1e10)
+    "max_decoding_length": int(1e10),
+    # BOW customized hparam
+    "bow_weight": 0.4
   }
 
   transformer_src_emb = {
@@ -170,6 +172,9 @@ class Config:
   beam_width = 5
   length_penalty = 0.8
   transformer_dec_max_len = 25  # Quora dataset's 95 percentile is 20
+
+  # BOW weights
+  dec_input_bow_weight = 0.4
 
 #########################################################################
 

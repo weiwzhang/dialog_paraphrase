@@ -133,6 +133,7 @@ class TransformerBow(object):
     self.transformer_dec_max_len = config.transformer_dec_max_len
     self.id2wordemb = config.id2wordemb
     self.word2vec_dim = config.word2vec_dim
+    self.dec_input_bow_weight = config.dec_input_bow_weight
     return 
 
   def build(self):
@@ -288,9 +289,9 @@ class TransformerBow(object):
                                    output_layer=_output_w,
                                    hparams=self.transformer_decoder)
 
-      dec_memory = [enc_outputs, sample_memory]  #[[batch_size, sample_size, enc_dim], [batch_size, timestep, enc_dim]]
-      dec_mem_len = [enc_lens, sample_memory_lens]  #[[batch_size, ]*sample_size, [batch_size, ]*enc_seq_len]
-      dec_max_mem_len = [max_len, self.sample_size] #[sample_size, max_len]
+      dec_memory = [enc_outputs + tf.expand_dims(self.dec_input_bow_weight * sample_memory_avg, axis=1), sample_memory]  #[[batch_size, timestep, enc_dim], [batch_size, sample_size, enc_dim]]
+      dec_mem_len = [enc_lens, sample_memory_lens]  #[[batch_size, ]*enc_seq_len, [batch_size, ]*sample_size]
+      dec_max_mem_len = [max_len, self.sample_size] #[max_len, sample_size]
       print("with bow final dec memory inputs:")
       print(dec_memory)
       print(dec_mem_len)
@@ -326,9 +327,9 @@ class TransformerBow(object):
     with tf.name_scope("dec_output"):
       # TODO: what losses should we use?
       dec_logits_train = outputs.logits
-      is_target = tf.cast(tf.not_equal(dec_targets, 0), tf.float32) # TODO: is this correctly evaluated????
+      # is_target = tf.cast(tf.not_equal(dec_targets, 0), tf.float32) # TODO: is this correctly evaluated????
       print("dec output - dec_targets", dec_targets)
-      print("dec output - is_target", is_target)
+      # print("dec output - is_target", is_target)
 
       def _embedding_fn(x, y):
           x_w_embed = tgt_embedder(x)
@@ -355,9 +356,11 @@ class TransformerBow(object):
       # beam_search_ids = predictions['sample_id'][:, :, 0]
       print("writing new inference...prediction indexes:", predictions.sample_id)
 
-      dec_loss = transformer_utils.smoothing_cross_entropy(
-        dec_logits_train, dec_targets, vocab_size, self.loss_label_confidence)
-      dec_loss = tf.reduce_sum(dec_loss * is_target) / tf.reduce_sum(is_target)
+      dec_mask = tf.sequence_mask(dec_lens, max_len, dtype=tf.float32)
+      dec_loss = tf.contrib.seq2seq.sequence_loss(dec_logits_train, dec_targets, dec_mask)
+      # dec_loss = transformer_utils.smoothing_cross_entropy(
+      #   dec_logits_train, dec_targets, vocab_size, self.loss_label_confidence)
+      # dec_loss = tf.reduce_sum(dec_loss * is_target) / tf.reduce_sum(is_target)
       print("dec loss:", dec_loss)
 
       loss = dec_loss + lambda_enc_loss * enc_loss

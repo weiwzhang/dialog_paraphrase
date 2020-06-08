@@ -269,6 +269,8 @@ class TransformerDecoder(ModuleBase, TFDecoder):
             },
             "initializer": None,
             "name": "transformer_decoder",
+            # BOW customized hparam
+            "bow_weight": 0.4
         }
 
     def _inputs_to_outputs(self, inputs, cache):
@@ -685,7 +687,7 @@ class TransformerDecoder(ModuleBase, TFDecoder):
                             memory_attention_bias=memory_attention_bias[1],
                             mode=mode,
                         )
-                        x = x + tf.layers.dropout(
+                        x = x + self._hparams.bow_weight * tf.layers.dropout(
                             encdec_output_bow,
                             rate=self._hparams.residual_dropout,
                             training=is_train_mode(mode))
