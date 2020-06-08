@@ -121,7 +121,9 @@ class TrainingLog(object):
                   "precision_confident": [],
                   "recall_confident": [0],
                   "precision_topk": [], 
-                  "recall_topk": []}
+                  "recall_topk": [],
+
+                  "dec_out_mem_ratio": []}
 
     elif(self.model == "seq2seq"):
       if(self.vae_seq2seq):

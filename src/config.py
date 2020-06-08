@@ -219,12 +219,12 @@ class Config:
 
   # evaluation metrics
   # eval_metrics_list = ["bleu", "rouge", "ppl", "dist", "self_bleu", "jaccard"]
-  # eval_metrics_list = ["bleu", "rouge", "mem_cover"]
-  eval_metrics_list = ["bleu", "rouge"]
+  eval_metrics_list = ["bleu", "rouge", "mem_cover", "jaccard", "ppl"]
+  # eval_metrics_list = ["bleu", "rouge"]
   log_metrics = ["predict_average_confident", "target_average"]
   write_output = True
   single_ref = False
-  compare_outputs = True 
+  compare_outputs = False 
 
   # optimizer 
   learning_rate_decay = False
