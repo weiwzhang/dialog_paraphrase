@@ -170,7 +170,7 @@ class TransformerBow(object):
       self.dec_targets = dec_targets
       self.dec_lens = dec_lens
       self.global_step = tf.Variable(0, dtype=tf.int64, trainable=False)
-      self.learning_rate = tf.placeholder(tf.float64, shape=(), name='lr')
+      # self.learning_rate = tf.placeholder(tf.float64, shape=(), name='lr')
 
     batch_size = tf.shape(enc_inputs)[0]
     # batch_size = 5
@@ -340,14 +340,14 @@ class TransformerBow(object):
           return x_w_embed * self.state_size ** 0.5 + y_p_embed
       # For inference (beam-search)
       start_tokens = tf.fill([batch_size], self.dec_start_id)  # start tokens
-      predictions, _ = decoder(
+      predictions = decoder(
           # memory=enc_outputs,
           memory=dec_memory,
           # memory_sequence_length=enc_lens,
           memory_sequence_length=dec_mem_len,
-          beam_width=None,    # TODO: add beam search
+          beam_width=self.beam_width,    # TODO: add beam search
           length_penalty=self.length_penalty,
-          decoding_strategy="infer_greedy",
+          # decoding_strategy="infer_greedy",
           start_tokens=start_tokens,
           end_token=self.dec_end_id,  # end tokens
           embedding=_embedding_fn,
@@ -356,8 +356,9 @@ class TransformerBow(object):
       print("predictions:", predictions)
       # vocab_dist = tf.nn.softmax(predictions.logits)
       # Uses the best sample by beam search
-      # beam_search_ids = predictions['sample_id'][:, :, 0]
-      print("writing new inference...prediction indexes:", predictions.sample_id)
+      beam_search_ids = predictions['sample_id'][:, :, 0]
+      # print("writing new inference...prediction indexes:", predictions.sample_id)
+      print("writing new inference...prediction indexes:", beam_search_ids)
 
       dec_mask = tf.sequence_mask(dec_lens, max_len, dtype=tf.float32)
       dec_loss = tf.contrib.seq2seq.sequence_loss(dec_logits_train, dec_targets, dec_mask)
@@ -384,8 +385,11 @@ class TransformerBow(object):
       for v in model_variables: print("  %s" % v.name)
       self.model_saver = tf.train.Saver(model_variables, max_to_keep=3)
 
-      self.infer_output = {"dec_predict": predictions.sample_id}
-      dec_out_mem_ratio = _calculate_dec_out_mem_ratio(predictions.sample_id, 
+      # self.infer_output = {"dec_predict": predictions.sample_id}
+      # dec_out_mem_ratio = _calculate_dec_out_mem_ratio(predictions.sample_id, 
+      #   sample_ind, vocab_size, self.pad_id, self.dec_start_id, self.dec_end_id)
+      self.infer_output = {"dec_predict": beam_search_ids}
+      dec_out_mem_ratio = _calculate_dec_out_mem_ratio(beam_search_ids, 
         sample_ind, vocab_size, self.pad_id, self.dec_start_id, self.dec_end_id)
       self.infer_output.update(dec_out_mem_ratio)
       self.infer_output.update(sample_memory_output)
@@ -402,8 +406,7 @@ class TransformerBow(object):
                   self.dec_targets: batch_dict["dec_targets"],
                   self.dec_lens: batch_dict["dec_lens"],
                   self.drop_out: self.drop_out_config,
-                  self.gumbel_tau: self.gumbel_tau_config,
-                  self.learning_rate: self.get_learning_rate(batch_dict["step"], self.lr)}
+                  self.gumbel_tau: self.gumbel_tau_config}
     output_dict = sess.run(self.train_output, feed_dict=feed_dict)
     return output_dict
 
