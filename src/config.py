@@ -56,7 +56,7 @@ class Config:
   model_path = "../models/"
   output_path = "../outputs/"
 
-  state_size = 500
+  state_size = 300
   drop_out = 0.6
 
   # encoder
@@ -72,21 +72,21 @@ class Config:
 ### For Transformer
 
   # Word2Vec settings
-  word2vec_dim = 500  # TODO: revisit this number
+  word2vec_dim = 300  # TODO: revisit this number
   id2wordemb = None    # filled during dataset configuration
 
   transformer_encoder = {
-    'dim': 500,
+    'dim': 300,
     'num_blocks': 2,
     # 'use_bert_config': False,
-    "embedding_dropout": 0.2,
-    "residual_dropout": 0.2,
+    "embedding_dropout": 0.3,
+    "residual_dropout": 0.3,
     'multihead_attention': {
         'name': 'multihead_attention',
         'num_heads': 8,
-        'output_dim': 500,
+        'output_dim': 300,
         # 'num_units': 512,
-        # 'dropout_rate': 0.1,
+        'dropout_rate': 0.1,
         # 'use_bias': False,
         # See documentation for more optional hyperparameters
     },
@@ -104,17 +104,17 @@ class Config:
 
   # Note: this is exactly same as transformer_encoder
   transformer_decoder = {
-    'dim': 500,  # encoder output dimension
+    'dim': 300,  # encoder output dimension
     'num_blocks': 2,
     # 'use_bert_config': False,
-    "embedding_dropout": 0.2,
-    "residual_dropout": 0.2,
+    "embedding_dropout": 0.3,
+    "residual_dropout": 0.3,
     'multihead_attention': {
         'name': 'multihead_attention',
         'num_heads': 8,
-        'output_dim': 500,
+        'output_dim': 300,
         # 'num_units': 512,
-        # 'dropout_rate': 0.1,
+        'dropout_rate': 0.1,
         # 'use_bias': False,
         # See documentation for more optional hyperparameters
     },
@@ -161,13 +161,12 @@ class Config:
     }
   }
 
-  # # TODO: use this for better training
-  # lr = {
-  #   'learning_rate_schedule': 'constant.linear_warmup.rsqrt_decay.rsqrt_depth',
-  #   'lr_constant': 2 * (hidden_dim ** -0.5),
-  #   'static_lr': 1e-3,
-  #   'warmup_steps': 16000,
-  # }
+  lr = {
+    'learning_rate_schedule': 'constant.linear_warmup.rsqrt_decay.rsqrt_depth',  # or "static"
+    'lr_constant': 2 * (state_size ** -0.5),
+    'static_lr': 1e-3,
+    'warmup_steps': 10001,   # change to same as batch size
+  }
 
   beam_width = 5
   length_penalty = 0.8
@@ -219,7 +218,7 @@ class Config:
 
   # evaluation metrics
   # eval_metrics_list = ["bleu", "rouge", "ppl", "dist", "self_bleu", "jaccard"]
-  eval_metrics_list = ["bleu", "rouge", "mem_cover", "jaccard", "ppl"]
+  eval_metrics_list = ["bleu", "rouge", "mem_cover", "jaccard"]
   # eval_metrics_list = ["bleu", "rouge"]
   log_metrics = ["predict_average_confident", "target_average"]
   write_output = True

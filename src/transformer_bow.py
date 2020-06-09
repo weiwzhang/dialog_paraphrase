@@ -13,6 +13,7 @@ from texar.tf.modules import TransformerEncoder
 # from texar.tf.modules import TransformerDecoder
 from texar_decoder_customized import TransformerDecoder
 from texar.tf.utils import transformer_utils
+import math
 
 from tensorflow.nn.rnn_cell import LSTMStateTuple
 from tensorflow.contrib import slim
@@ -134,6 +135,7 @@ class TransformerBow(object):
     self.id2wordemb = config.id2wordemb
     self.word2vec_dim = config.word2vec_dim
     self.dec_input_bow_weight = config.dec_input_bow_weight
+    self.lr = config.lr
     return 
 
   def build(self):
@@ -168,6 +170,7 @@ class TransformerBow(object):
       self.dec_targets = dec_targets
       self.dec_lens = dec_lens
       self.global_step = tf.Variable(0, dtype=tf.int64, trainable=False)
+      self.learning_rate = tf.placeholder(tf.float64, shape=(), name='lr')
 
     batch_size = tf.shape(enc_inputs)[0]
     # batch_size = 5
@@ -374,7 +377,6 @@ class TransformerBow(object):
       dec_output = {"train_op": train_op, "dec_loss": dec_loss, "loss": loss}
       self.train_output.update(dec_output)
 
-      # model saver, before the optimizer 
       all_variables = slim.get_variables_to_restore()
       model_variables = [var for var in all_variables 
         if var.name.split("/")[0] == self.model_name]
@@ -400,7 +402,8 @@ class TransformerBow(object):
                   self.dec_targets: batch_dict["dec_targets"],
                   self.dec_lens: batch_dict["dec_lens"],
                   self.drop_out: self.drop_out_config,
-                  self.gumbel_tau: self.gumbel_tau_config}
+                  self.gumbel_tau: self.gumbel_tau_config,
+                  self.learning_rate: self.get_learning_rate(batch_dict["step"], self.lr)}
     output_dict = sess.run(self.train_output, feed_dict=feed_dict)
     return output_dict
 
@@ -414,3 +417,13 @@ class TransformerBow(object):
                   }
     output_dict = sess.run(self.infer_output, feed_dict=feed_dict)
     return output_dict
+
+  # logic to generate dynamically changing learning rate
+  def get_learning_rate(self, fstep, opt_config):
+    if opt_config['learning_rate_schedule'] == 'static':
+        lr = opt_config['static_lr']
+    else:
+        lr = opt_config['lr_constant'] \
+            * min(1.0, (fstep / opt_config['warmup_steps'])) \
+            * (1 / math.sqrt(max(fstep, opt_config['warmup_steps'])))
+    return lr
