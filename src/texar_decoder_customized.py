@@ -108,8 +108,8 @@ class TransformerDecoder(ModuleBase, TFDecoder):
             # Make attention and poswise networks
             self.multihead_attentions = {
                 'self_att': [],
-                'encdec_att_enc_output': [],
-                'encdec_att_bow_sample': []
+                'encdec_att_enc_output': []
+                # 'encdec_att_bow_sample': []
             }
             self.poswise_networks = []
             for i in range(self._hparams.num_blocks):
@@ -133,17 +133,17 @@ class TransformerDecoder(ModuleBase, TFDecoder):
                         self.multihead_attentions['encdec_att_enc_output'].append(
                             multihead_attention)
 
-                    if self._hparams.dim != \
-                            multihead_attention.hparams.output_dim:
-                        raise ValueError('The output dimenstion of '
-                                         'MultiheadEncoder should be equal '
-                                         'to the dim of TransformerDecoder')
+                    # if self._hparams.dim != \
+                    #         multihead_attention.hparams.output_dim:
+                    #     raise ValueError('The output dimenstion of '
+                    #                      'MultiheadEncoder should be equal '
+                    #                      'to the dim of TransformerDecoder')
 
-                    with tf.variable_scope('encdec_attention_bow_sample'):
-                        multihead_attention = MultiheadAttentionEncoder(
-                            self._hparams.multihead_attention)
-                        self.multihead_attentions['encdec_att_bow_sample'].append(
-                            multihead_attention)
+                    # with tf.variable_scope('encdec_attention_bow_sample'):
+                    #     multihead_attention = MultiheadAttentionEncoder(
+                    #         self._hparams.multihead_attention)
+                    #     self.multihead_attentions['encdec_att_bow_sample'].append(
+                    #         multihead_attention)
 
                     if self._hparams.dim != \
                             multihead_attention.hparams.output_dim:
@@ -490,16 +490,21 @@ class TransformerDecoder(ModuleBase, TFDecoder):
                     raise ValueError(
                         "`memory_sequence_length` is required if "
                         "`memory_attention_bias` is not given.")
-                memory = [memory] if not isinstance(memory, list) else memory
-                # print("DEBUGGGGGGGGGGGGG:", memory)
-                memory_attention_bias = []
-                for i in range(len(memory)):
-                    enc_padding = 1 - tf.sequence_mask(
-                        memory_sequence_length[i], shape_list(memory[i])[1],
-                        dtype=tf.float32)
-                    curr_memory_attention_bias = attn.attention_bias_ignore_padding(
-                        enc_padding)
-                    memory_attention_bias.append(curr_memory_attention_bias)
+                # memory = [memory] if not isinstance(memory, list) else memory
+                # # print("DEBUGGGGGGGGGGGGG:", memory)
+                # memory_attention_bias = []
+                # for i in range(len(memory)):
+                #     enc_padding = 1 - tf.sequence_mask(
+                #         memory_sequence_length[i], shape_list(memory[i])[1],
+                #         dtype=tf.float32)
+                #     curr_memory_attention_bias = attn.attention_bias_ignore_padding(
+                #         enc_padding)
+                #     memory_attention_bias.append(curr_memory_attention_bias)
+                enc_padding = 1 - tf.sequence_mask(
+                    memory_sequence_length, shape_list(memory)[1],
+                    dtype=tf.float32)
+                memory_attention_bias = attn.attention_bias_ignore_padding(
+                    enc_padding)
 
         # record the context, which will be used in step function
         # for dynamic_decode
@@ -669,8 +674,10 @@ class TransformerDecoder(ModuleBase, TFDecoder):
                             self.multihead_attentions['encdec_att_enc_output'][i]
                         encdec_output = multihead_attention(
                             queries=_layer_norm(x, encdec_attention_scope),
-                            memory=memory[0],
-                            memory_attention_bias=memory_attention_bias[0],
+                            # memory=memory[0],
+                            memory=memory,
+                            # memory_attention_bias=memory_attention_bias[0],
+                            memory_attention_bias=memory_attention_bias,
                             mode=mode,
                         )
                         x = x + tf.layers.dropout(
@@ -678,19 +685,19 @@ class TransformerDecoder(ModuleBase, TFDecoder):
                             rate=self._hparams.residual_dropout,
                             training=is_train_mode(mode))
 
-                        # print("stack enc attention layer bow")
-                        multihead_attention = \
-                            self.multihead_attentions['encdec_att_bow_sample'][i]
-                        encdec_output_bow = multihead_attention(
-                            queries=_layer_norm(x, encdec_attention_scope),
-                            memory=memory[1],
-                            memory_attention_bias=memory_attention_bias[1],
-                            mode=mode,
-                        )
-                        x = x + self._hparams.bow_weight * tf.layers.dropout(
-                            encdec_output_bow,
-                            rate=self._hparams.residual_dropout,
-                            training=is_train_mode(mode))
+                        # # print("stack enc attention layer bow")
+                        # multihead_attention = \
+                        #     self.multihead_attentions['encdec_att_bow_sample'][i]
+                        # encdec_output_bow = multihead_attention(
+                        #     queries=_layer_norm(x, encdec_attention_scope),
+                        #     memory=memory[1],
+                        #     memory_attention_bias=memory_attention_bias[1],
+                        #     mode=mode,
+                        # )
+                        # x = x + self._hparams.bow_weight * tf.layers.dropout(
+                        #     encdec_output_bow,
+                        #     rate=self._hparams.residual_dropout,
+                        #     training=is_train_mode(mode))
                 poswise_network = self.poswise_networks[i]
                 with tf.variable_scope('past_poswise_ln') as \
                         past_poswise_ln_scope:

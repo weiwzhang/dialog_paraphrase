@@ -313,10 +313,10 @@ class TransformerBow(object):
 
       # For training
       outputs = decoder(
-          # memory=enc_outputs,
-          memory=dec_memory,
-          # memory_sequence_length=enc_lens,
-          memory_sequence_length=dec_mem_len,
+          memory=enc_outputs,
+          # memory=dec_memory,
+          memory_sequence_length=enc_lens,
+          # memory_sequence_length=dec_mem_len,
           inputs=tgt_input_embedding,
           decoding_strategy='train_greedy',
           mode=tf.estimator.ModeKeys.TRAIN
@@ -341,10 +341,10 @@ class TransformerBow(object):
       # For inference (beam-search)
       start_tokens = tf.fill([batch_size], self.dec_start_id)  # start tokens
       predictions = decoder(
-          # memory=enc_outputs,
-          memory=dec_memory,
-          # memory_sequence_length=enc_lens,
-          memory_sequence_length=dec_mem_len,
+          memory=enc_outputs,
+          # memory=dec_memory,
+          memory_sequence_length=enc_lens,
+          # memory_sequence_length=dec_mem_len,
           beam_width=self.beam_width,    # TODO: add beam search
           length_penalty=self.length_penalty,
           # decoding_strategy="infer_greedy",
