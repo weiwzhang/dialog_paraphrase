@@ -11,14 +11,14 @@ import numpy as np
 from config import Config
 from controller import Controller
 from data_utils import Dataset
-from data_utils_table2text import DatasetTable2text
+# from data_utils_table2text import DatasetTable2text
 from seq2seq import Seq2seq
 from bow_seq2seq import BowSeq2seq
 from transformer_bow import TransformerBow
 from latent_bow import LatentBow
-from latent_bow_data2text import LatentBowData2text
-from seq2seq_data2text import Seq2seqData2text
-from lm import LM
+# from latent_bow_data2text import LatentBowData2text
+# from seq2seq_data2text import Seq2seqData2text
+# from lm import LM
 
 from tqdm import tqdm
 from time import time
